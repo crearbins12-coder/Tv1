@@ -17,21 +17,18 @@ jobs:
           java-version: 17
       - name: Preparar proyecto
         run: |
+          echo "Archivos del repositorio:"
+          find . -maxdepth 2 -not -path './.git/*' -not -path './node_modules/*'
+          HTML=$(find . -name '*.html' -not -path './node_modules/*' | head -n 1)
+          if [ -z "$HTML" ]; then echo "NO HAY ARCHIVO HTML EN EL REPOSITORIO"; exit 1; fi
+          echo "Usando: $HTML"
           npm init -y
           npm i @capacitor/core@6 @capacitor/cli@6 @capacitor/android@6 @capacitor/app@6 hls.js@1.5.13
           mkdir -p www
-          cp index.html www/index.html
+          cp "$HTML" www/index.html
           cp node_modules/hls.js/dist/hls.min.js www/hls.min.js
           sed -i 's#https://cdnjs.cloudflare.com/ajax/libs/hls.js/1.5.13/hls.min.js#hls.min.js#' www/index.html
-          cat > capacitor.config.json <<'EOF'
-          {
-            "appId": "com.tuapp.tvm3u",
-            "appName": "TV M3U",
-            "webDir": "www",
-            "server": { "androidScheme": "http", "cleartext": true },
-            "plugins": { "CapacitorHttp": { "enabled": true } }
-          }
-          EOF
+          echo '{"appId":"com.tuapp.tvm3u","appName":"TV M3U","webDir":"www","server":{"androidScheme":"http","cleartext":true},"plugins":{"CapacitorHttp":{"enabled":true}}}' > capacitor.config.json
       - name: Crear Android y ajustar para TV
         run: |
           npx cap add android
